@@ -5,7 +5,7 @@ import setuptools
 
 
 path = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(path, 'README.md')) as fd:
+with open(os.path.join(path, 'README.rst')) as fd:
     long_desc = fd.read()
 
 setuptools.setup(
@@ -35,7 +35,7 @@ setuptools.setup(
     url='https://github.com/RiotGames/cinq-standalone-scheduler/',
     author='Riot Games Security',
     author_email='security@riotgames.com',
-    license='Apache 2.0',
+    license='License :: OSI Approved :: Apache Software License',
     classifiers=[
         # Current project status
         'Development Status :: 4 - Beta',
@@ -45,7 +45,7 @@ setuptools.setup(
         'Intended Audience :: Information Technology',
 
         # License information
-        'License :: OSI Approved :: Apache 2.0',
+        'License :: OSI Approved :: Apache Software License',
 
         # Supported python versions
         'Programming Language :: Python :: 3.5',
@@ -58,7 +58,7 @@ setuptools.setup(
         # Supported OS's
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: POSIX :: Linux',
-        'Operating System :: Unix'
+        'Operating System :: Unix',
 
         # Extra metadata
         'Environment :: Console',
