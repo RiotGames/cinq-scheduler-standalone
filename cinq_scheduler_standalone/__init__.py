@@ -85,7 +85,7 @@ class StandaloneScheduler(BaseScheduler):
         }
         new_jobs = []
         start = datetime.now() + timedelta(seconds=1)
-        accounts = Account.query.filter_by(enabled=1).all()
+        accounts = db.Account.find(Account.enabled == 1)
 
         # region Global collectors (non-aws)
         if CollectorType.GLOBAL in self.collectors:
@@ -284,7 +284,7 @@ class StandaloneScheduler(BaseScheduler):
                 self.log.info('Running cleanup tasks')
 
                 log_purge_date = datetime.now() - timedelta(days=self.dbconfig.get('log_keep_days', 'log', default=31))
-                LogEvent.query.filter(LogEvent.timestamp < log_purge_date).all()
+                db.LogEvent.find(LogEvent.timestamp < log_purge_date)
 
                 db.session.commit()
             finally:
