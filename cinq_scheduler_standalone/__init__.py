@@ -2,8 +2,9 @@ from datetime import datetime, timedelta
 
 from apscheduler.executors.pool import ProcessPoolExecutor
 from apscheduler.schedulers.blocking import BlockingScheduler as APScheduler
-from cloud_inquisitor import app_config, db, AWS_REGIONS
+from cloud_inquisitor import app_config, AWS_REGIONS
 from cloud_inquisitor.config import dbconfig, ConfigOption
+from cloud_inquisitor.database import db
 from cloud_inquisitor.plugins import CollectorType, BaseScheduler
 from cloud_inquisitor.schema import Account, LogEvent, AccountTypes
 
