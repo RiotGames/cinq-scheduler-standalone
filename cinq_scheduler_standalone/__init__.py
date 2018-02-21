@@ -2,10 +2,12 @@ from datetime import datetime, timedelta
 
 from apscheduler.executors.pool import ProcessPoolExecutor
 from apscheduler.schedulers.blocking import BlockingScheduler as APScheduler
-from cloud_inquisitor import app, db, AWS_REGIONS
+from cloud_inquisitor import app_config, AWS_REGIONS
 from cloud_inquisitor.config import dbconfig, ConfigOption
+from cloud_inquisitor.constants import AccountTypes
+from cloud_inquisitor.database import db
 from cloud_inquisitor.plugins import CollectorType, BaseScheduler
-from cloud_inquisitor.schema import Account, LogEvent, AccountTypes
+from cloud_inquisitor.schema import Account, LogEvent
 
 
 class StandaloneScheduler(BaseScheduler):
@@ -85,7 +87,7 @@ class StandaloneScheduler(BaseScheduler):
         }
         new_jobs = []
         start = datetime.now() + timedelta(seconds=1)
-        accounts = Account.query.filter_by(enabled=1).all()
+        accounts = db.Account.find(Account.enabled == 1)
 
         # region Global collectors (non-aws)
         if CollectorType.GLOBAL in self.collectors:
@@ -183,7 +185,7 @@ class StandaloneScheduler(BaseScheduler):
             if job_name in current_jobs:
                 continue
 
-            if app.config.get('DEBUG', False):
+            if app_config.log_level == 'DEBUG':
                 audit_start = start + timedelta(seconds=5)
             else:
                 audit_start = start + timedelta(minutes=5)
@@ -210,82 +212,77 @@ class StandaloneScheduler(BaseScheduler):
             current_jobs[job].remove()
 
     def execute_global_worker(self, data, **kwargs):
-        with app.app_context():
-            try:
-                self.log.info('Starting global {} worker'.format(data.name))
-                cls = self.get_class_from_ep(data.ep)
-                worker = cls(**kwargs)
-                worker.run()
+        try:
+            self.log.info('Starting global {} worker'.format(data.name))
+            cls = self.get_class_from_ep(data.ep)
+            worker = cls(**kwargs)
+            worker.run()
 
-            except Exception as ex:
-                self.log.exception('Global Worker {}: {}'.format(data.name, ex))
+        except Exception as ex:
+            self.log.exception('Global Worker {}: {}'.format(data.name, ex))
 
-            finally:
-                db.session.rollback()
-                self.log.info('Completed run for global {} worker'.format(data.name))
+        finally:
+            db.session.rollback()
+            self.log.info('Completed run for global {} worker'.format(data.name))
 
     def execute_aws_account_worker(self, data, **kwargs):
-        with app.app_context():
-            try:
-                self.log.info('Starting {} worker on {}'.format(data.name, kwargs['account']))
-                cls = self.get_class_from_ep(data.ep)
-                worker = cls(**kwargs)
-                worker.run()
+        try:
+            self.log.info('Starting {} worker on {}'.format(data.name, kwargs['account']))
+            cls = self.get_class_from_ep(data.ep)
+            worker = cls(**kwargs)
+            worker.run()
 
-            except Exception as ex:
-                self.log.exception('AWS Account Worker {}/{}: {}'.format(data.name, kwargs['account'], ex))
+        except Exception as ex:
+            self.log.exception('AWS Account Worker {}/{}: {}'.format(data.name, kwargs['account'], ex))
 
-            finally:
-                db.session.rollback()
-                self.log.info('Completed run for {} worker on {}'.format(data.name, kwargs['account']))
+        finally:
+            db.session.rollback()
+            self.log.info('Completed run for {} worker on {}'.format(data.name, kwargs['account']))
 
     def execute_aws_region_worker(self, data, **kwargs):
-        with app.app_context():
-            try:
-                self.log.info('Starting {} worker on {}/{}'.format(data.name, kwargs['account'], kwargs['region']))
-                cls = self.get_class_from_ep(data.ep)
-                worker = cls(**kwargs)
-                worker.run()
+        try:
+            self.log.info('Starting {} worker on {}/{}'.format(data.name, kwargs['account'], kwargs['region']))
+            cls = self.get_class_from_ep(data.ep)
+            worker = cls(**kwargs)
+            worker.run()
 
-            except Exception as ex:
-                self.log.exception('AWS Region Worker {}/{}/{}: {}'.format(
-                    data.name,
-                    kwargs['account'],
-                    kwargs['region'],
-                    ex
-                ))
+        except Exception as ex:
+            self.log.exception('AWS Region Worker {}/{}/{}: {}'.format(
+                data.name,
+                kwargs['account'],
+                kwargs['region'],
+                ex
+            ))
 
-            finally:
-                db.session.rollback()
-                self.log.info('Completed run for {} worker on {}/{}'.format(
-                    data.name,
-                    kwargs['account'],
-                    kwargs['region']
-                ))
+        finally:
+            db.session.rollback()
+            self.log.info('Completed run for {} worker on {}/{}'.format(
+                data.name,
+                kwargs['account'],
+                kwargs['region']
+            ))
 
     def execute_auditor_worker(self, data, **kwargs):
-        with app.app_context():
-            try:
-                self.log.info('Starting {} auditor'.format(data.name))
-                cls = self.get_class_from_ep(data.ep)
-                worker = cls(**kwargs)
-                worker.run()
+        try:
+            self.log.info('Starting {} auditor'.format(data.name))
+            cls = self.get_class_from_ep(data.ep)
+            worker = cls(**kwargs)
+            worker.run()
 
-            except Exception as ex:
-                self.log.exception('Auditor Worker {}: {}'.format(data.name, ex))
+        except Exception as ex:
+            self.log.exception('Auditor Worker {}: {}'.format(data.name, ex))
 
-            finally:
-                db.session.rollback()
-                self.log.info('Completed run for auditor {}'.format(data.name))
+        finally:
+            db.session.rollback()
+            self.log.info('Completed run for auditor {}'.format(data.name))
 
     def cleanup(self):
-        with app.app_context():
-            try:
-                self.log.info('Running cleanup tasks')
+        try:
+            self.log.info('Running cleanup tasks')
 
-                log_purge_date = datetime.now() - timedelta(days=self.dbconfig.get('log_keep_days', 'log', default=31))
-                LogEvent.query.filter(LogEvent.timestamp < log_purge_date).all()
+            log_purge_date = datetime.now() - timedelta(days=self.dbconfig.get('log_keep_days', 'log', default=31))
+            db.LogEvent.find(LogEvent.timestamp < log_purge_date)
 
-                db.session.commit()
-            finally:
-                db.session.rollback()
+            db.session.commit()
+        finally:
+            db.session.rollback()
