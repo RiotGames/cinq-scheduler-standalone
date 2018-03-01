@@ -18,7 +18,6 @@ class StandaloneScheduler(BaseScheduler):
     pool = None
     scheduler = None
     options = (
-        ConfigOption('enabled', True, 'bool', 'Enable standalone scheduler and worker system'),
         ConfigOption('worker_threads', 20, 'int', 'Number of worker threads to spawn'),
         ConfigOption('worker_interval', 30, 'int', 'Delay between each worker thread being spawned, in seconds'),
     )
