@@ -15,7 +15,6 @@ class StandaloneScheduler(BaseScheduler):
     """
     name = 'Standalone Scheduler'
     ns = 'scheduler_standalone'
-    enabled = dbconfig.get('enabled', ns, default=False)
     pool = None
     scheduler = None
     options = (
