@@ -2,6 +2,8 @@
 cinq-standalone-scheduler
 *************************
 
+Please open issues in the `Cloud-Inquisitor <https://github.com/RiotGames/cloud-inquisitor/issues/new?labels=cinq-scheduler-standalone>`_ repository
+
 ===========
 Description
 ===========
