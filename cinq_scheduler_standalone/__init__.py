@@ -3,11 +3,11 @@ from datetime import datetime, timedelta
 from apscheduler.executors.pool import ProcessPoolExecutor
 from apscheduler.schedulers.blocking import BlockingScheduler as APScheduler
 from cloud_inquisitor import app_config, AWS_REGIONS
-from cloud_inquisitor.config import dbconfig, ConfigOption
-from cloud_inquisitor.constants import AccountTypes
+from cloud_inquisitor.config import ConfigOption
 from cloud_inquisitor.database import db
 from cloud_inquisitor.plugins import CollectorType, BaseScheduler
-from cloud_inquisitor.schema import Account, LogEvent
+from cloud_inquisitor.plugins.types.accounts import BaseAccount, AWSAccount
+from cloud_inquisitor.schema import LogEvent
 
 
 class StandaloneScheduler(BaseScheduler):
@@ -85,7 +85,7 @@ class StandaloneScheduler(BaseScheduler):
         }
         new_jobs = []
         start = datetime.now() + timedelta(seconds=1)
-        accounts = db.Account.find(Account.enabled == 1)
+        _, accounts = BaseAccount.search(include_disabled=False)
 
         # region Global collectors (non-aws)
         if CollectorType.GLOBAL in self.collectors:
@@ -116,7 +116,8 @@ class StandaloneScheduler(BaseScheduler):
         # endregion
 
         # region AWS collectors
-        for acct in filter(lambda x: x.account_type == AccountTypes.AWS, accounts):
+        aws_accounts = list(filter(lambda x: x.account_type == AWSAccount.account_type, accounts))
+        for acct in aws_accounts:
             if CollectorType.AWS_ACCOUNT in self.collectors:
                 for wkr in self.collectors[CollectorType.AWS_ACCOUNT]:
                     job_name = '{}_{}'.format(acct.account_name, wkr.name)
