@@ -213,7 +213,7 @@ class StandaloneScheduler(BaseScheduler):
     def execute_global_worker(self, data, **kwargs):
         try:
             self.log.info('Starting global {} worker'.format(data.name))
-            cls = self.get_class_from_ep(data.ep)
+            cls = self.get_class_from_ep(data.entry_point)
             worker = cls(**kwargs)
             worker.run()
 
@@ -227,7 +227,7 @@ class StandaloneScheduler(BaseScheduler):
     def execute_aws_account_worker(self, data, **kwargs):
         try:
             self.log.info('Starting {} worker on {}'.format(data.name, kwargs['account']))
-            cls = self.get_class_from_ep(data.ep)
+            cls = self.get_class_from_ep(data.entry_point)
             worker = cls(**kwargs)
             worker.run()
 
@@ -241,7 +241,7 @@ class StandaloneScheduler(BaseScheduler):
     def execute_aws_region_worker(self, data, **kwargs):
         try:
             self.log.info('Starting {} worker on {}/{}'.format(data.name, kwargs['account'], kwargs['region']))
-            cls = self.get_class_from_ep(data.ep)
+            cls = self.get_class_from_ep(data.entry_point)
             worker = cls(**kwargs)
             worker.run()
 
@@ -264,7 +264,7 @@ class StandaloneScheduler(BaseScheduler):
     def execute_auditor_worker(self, data, **kwargs):
         try:
             self.log.info('Starting {} auditor'.format(data.name))
-            cls = self.get_class_from_ep(data.ep)
+            cls = self.get_class_from_ep(data.entry_point)
             worker = cls(**kwargs)
             worker.run()
 
